@@ -1,0 +1,1415 @@
+/* Strata — Geological Explorer
+   Dark scientific-instrument aesthetic
+*/
+
+:root {
+  --bg-void: #050609;
+  --bg-panel: rgba(11, 14, 20, 0.85);
+  --bg-panel-solid: #0b0e14;
+  --border-line: rgba(180, 200, 235, 0.12);
+  --border-glow: rgba(200, 220, 255, 0.28);
+  --text-primary: #e6eaf2;
+  --text-muted: #7c8698;
+  --text-dim: #4a5262;
+  --accent-cyan: #6fd0e4;
+  --accent-amber: #e8c874;
+  --hairline: rgba(255, 255, 255, 0.05);
+  --shadow-panel: 0 20px 60px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--border-line);
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+.App {
+  height: 100vh;
+  width: 100vw;
+  position: relative;
+  background: var(--bg-void);
+}
+
+/* ---------- Map surface ---------- */
+.strata-map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: #05070a;
+}
+
+.leaflet-container {
+  background: #05070a !important;
+  font-family: 'Space Grotesk', sans-serif;
+  outline: none;
+}
+
+.leaflet-control-attribution {
+  background: rgba(5, 6, 9, 0.75) !important;
+  color: var(--text-dim) !important;
+  font-size: 10px !important;
+  padding: 2px 8px !important;
+  border: none !important;
+}
+.leaflet-control-attribution a { color: var(--text-muted) !important; }
+
+.leaflet-control-zoom {
+  border: 1px solid var(--border-line) !important;
+  border-radius: 6px !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+}
+.leaflet-control-zoom a {
+  background: rgba(11, 14, 20, 0.92) !important;
+  color: var(--text-primary) !important;
+  border-bottom: 1px solid var(--hairline) !important;
+  transition: background 0.2s ease;
+}
+.leaflet-control-zoom a:hover {
+  background: rgba(30, 36, 48, 0.95) !important;
+  color: var(--accent-cyan) !important;
+}
+
+/* Formation popup */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-panel-solid) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-line);
+  border-radius: 4px !important;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.8) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-content {
+  margin: 12px 14px !important;
+  font-family: 'Space Grotesk', sans-serif !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  min-width: 180px;
+}
+.leaflet-popup-tip {
+  background: var(--bg-panel-solid) !important;
+  border: 1px solid var(--border-line) !important;
+}
+.leaflet-popup-close-button { color: var(--text-muted) !important; }
+.formation-popup .fp-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+.formation-popup .fp-rock {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.formation-popup .fp-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+  vertical-align: middle;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+/* ---------- Header (top strip) ---------- */
+.strata-header {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 400;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  padding: 8px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow-panel);
+  pointer-events: auto;
+}
+.strata-header .brand-mark {
+  width: 8px;
+  height: 8px;
+  background: var(--accent-cyan);
+  border-radius: 50%;
+  box-shadow: 0 0 12px var(--accent-cyan);
+  animation: pulse 2.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 12px var(--accent-cyan); }
+  50% { opacity: 0.55; box-shadow: 0 0 4px var(--accent-cyan); }
+}
+.strata-header .brand-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+.strata-header .brand-name-short { display: none; }
+@media (max-width: 700px) {
+  .strata-header .brand-name-full { display: none; }
+  .strata-header .brand-name-short { display: block; }
+}
+.strata-header .brand-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  border-left: 1px solid var(--border-line);
+  padding-left: 14px;
+}
+
+/* ---------- Legend Panel (left) ---------- */
+.legend-panel {
+  position: absolute;
+  top: 72px;
+  left: 16px;
+  bottom: 200px;
+  width: 320px;
+  z-index: 400;
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-line);
+  border-radius: 6px;
+  box-shadow: var(--shadow-panel);
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+.legend-panel::-webkit-scrollbar { width: 4px; }
+.legend-panel::-webkit-scrollbar-track { background: transparent; }
+.legend-panel::-webkit-scrollbar-thumb { background: var(--border-line); border-radius: 2px; }
+
+.legend-header {
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid var(--hairline);
+  position: sticky;
+  top: 0;
+  background: linear-gradient(180deg, rgba(11,14,20,0.98) 0%, rgba(11,14,20,0.85) 100%);
+  backdrop-filter: blur(20px);
+  z-index: 2;
+}
+.legend-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.legend-era-name {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.legend-era-period {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--accent-cyan);
+  margin-bottom: 4px;
+}
+.legend-era-tagline {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+.legend-era-eon {
+  display: inline-block;
+  margin-top: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border: 1px solid var(--border-line);
+  padding: 2px 8px;
+  border-radius: 2px;
+}
+
+.legend-section {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--hairline);
+}
+.legend-section-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.legend-section-title::before {
+  content: '';
+  width: 12px;
+  height: 1px;
+  background: var(--accent-cyan);
+  opacity: 0.6;
+}
+
+.legend-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.legend-list li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  padding: 5px 0;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+.legend-list.geology li::before {
+  content: '';
+  width: 4px;
+  height: 4px;
+  background: var(--accent-amber);
+  border-radius: 50%;
+  margin-top: 8px;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.legend-list .life-icon {
+  font-size: 15px;
+  flex-shrink: 0;
+  filter: grayscale(0.2);
+}
+
+.legend-formation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  font-size: 12px;
+  color: var(--text-primary);
+}
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  border: 1px solid rgba(255,255,255,0.15);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+.legend-formation-name {
+  font-size: 12px;
+  line-height: 1.35;
+}
+.legend-formation-rock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.legend-toggle {
+  display: none;
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 401;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  width: 42px;
+  height: 42px;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--text-primary);
+  box-shadow: var(--shadow-panel);
+}
+.legend-toggle:hover { color: var(--accent-cyan); }
+
+/* Wrapper anchors the mobile legend dropdown to the Menu button.
+   On desktop, display:contents makes the wrapper invisible in layout
+   so the LegendPanel keeps its original absolute positioning against .App. */
+.legend-nav-wrap { display: contents; }
+
+@media (max-width: 900px) {
+  .legend-nav-wrap {
+    display: block;
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 401;
+  }
+  .legend-nav-wrap .legend-toggle {
+    position: relative;
+    top: auto;
+    left: auto;
+    z-index: 2;
+  }
+  .legend-nav-wrap .legend-panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: auto;
+    width: min(88vw, 320px);
+    max-width: 320px;
+    max-height: calc(100vh - 220px);
+    z-index: 1;
+  }
+}
+
+/* ---------- Pin controls (top right) ---------- */
+.pin-controls {
+  position: absolute;
+  top: 132px;
+  right: 16px;
+  z-index: 400;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pin-btn {
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-panel);
+  min-width: 148px;
+  justify-content: flex-start;
+}
+.pin-btn:hover {
+  border-color: var(--border-glow);
+  background: rgba(20, 26, 38, 0.9);
+  color: var(--accent-cyan);
+}
+.pin-btn.active {
+  border-color: var(--accent-cyan);
+  color: var(--accent-cyan);
+  box-shadow: 0 0 0 1px var(--accent-cyan), var(--shadow-panel);
+}
+.pin-btn .btn-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-dim);
+}
+.pin-btn.active .btn-dot { background: var(--accent-cyan); box-shadow: 0 0 8px var(--accent-cyan); }
+.pin-btn.danger:hover { color: #e8746f; border-color: rgba(232, 116, 111, 0.5); }
+.pin-btn .pin-count {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-left: auto;
+  letter-spacing: 0;
+}
+
+/* Custom cursor when in pin-drop mode */
+.leaflet-container.pin-drop-mode { cursor: crosshair !important; }
+
+/* Dark-chrome styling for Leaflet's built-in overlay switcher */
+.leaflet-control-layers {
+  background: var(--bg-panel) !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-line) !important;
+  border-radius: 4px !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6) !important;
+  padding: 6px 10px !important;
+  font-family: 'JetBrains Mono', monospace !important;
+  font-size: 10.5px !important;
+  letter-spacing: 0.08em;
+}
+.leaflet-control-layers-expanded { padding: 8px 12px !important; }
+.leaflet-control-layers label {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 0;
+  color: var(--text-primary) !important;
+  cursor: pointer;
+  min-height: 24px;
+}
+.leaflet-control-layers input[type="checkbox"] {
+  accent-color: var(--accent-cyan);
+  cursor: pointer;
+  margin: 0;
+}
+.leaflet-control-layers-selector + span { color: var(--text-primary); }
+.leaflet-control-layers-separator { border-top-color: var(--hairline) !important; }
+.strata-thermal-marker {
+  filter: drop-shadow(0 0 6px rgba(255,90,31,0.5));
+}
+
+/* Pleistocene Flood layer — flow direction arrows + archaeological pins */
+.flood-arrow {
+  color: #E8A020;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  text-shadow: 0 0 6px rgba(232, 160, 32, 0.6), 0 1px 2px rgba(0,0,0,0.8);
+  pointer-events: none;
+  user-select: none;
+  text-align: center;
+}
+.flood-arrow-icon {
+  background: transparent !important;
+  border: none !important;
+}
+.archsite-divicon {
+  background: transparent !important;
+  border: none !important;
+}
+.archsite-pin {
+  width: 24px;
+  height: 32px;
+  filter: drop-shadow(0 3px 4px rgba(0,0,0,0.7));
+}
+.geoevent-divicon {
+  background: transparent !important;
+  border: none !important;
+}
+.geoevent-pin {
+  width: 24px;
+  height: 32px;
+  filter: drop-shadow(0 3px 6px rgba(168, 212, 255, 0.55));
+}
+
+/* Prehistoric Sites markers — category-styled dots */
+.prehistoric-divicon {
+  background: transparent !important;
+  border: none !important;
+}
+.prehistoric-marker {
+  width: 18px;
+  height: 18px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.prehistoric-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.prehistoric-label {
+  position: absolute;
+  color: #0b0e14;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+.prehistoric-story-marker .prehistoric-dot {
+  border: 1px solid #0b0e14;
+}
+
+/* ---------- Backdrop for legend dropdown (mobile/tablet only) ---------- */
+.legend-backdrop {
+  display: none;
+}
+@media (max-width: 1024px) {
+  .legend-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: transparent;
+    z-index: 0;
+    cursor: pointer;
+  }
+}
+
+/* ---------- Install App badge (PWA prompt) ---------- */
+.install-app-badge {
+  position: fixed;
+  top: 260px;
+  right: 16px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-panel);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  padding: 4px 4px 4px 10px;
+  box-shadow: var(--shadow-panel);
+  animation: badgeIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@keyframes badgeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.install-app-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  padding: 6px 4px;
+}
+.install-app-btn:hover { color: var(--accent-cyan); }
+.install-app-dismiss {
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 4px 8px;
+  border-left: 1px solid var(--hairline);
+}
+.install-app-dismiss:hover { color: var(--text-primary); }
+
+/* iOS "Add to Home Screen" instruction banner — bottom toast style */
+.install-app-banner-ios {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: 96px;
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-glow);
+  border-left: 3px solid var(--accent-amber);
+  border-radius: 6px;
+  padding: 12px 6px 12px 14px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 20px 60px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px var(--border-line);
+  animation: badgeIn 0.35s cubic-bezier(0.34, 1.4, 0.64, 1);
+  max-width: 520px;
+  margin: 0 auto;
+}
+.install-app-banner-ios .install-ios-text { flex: 1; }
+.install-app-banner-ios .install-ios-text b {
+  font-weight: 600;
+  color: var(--accent-amber);
+}
+.install-app-banner-ios .install-ios-icon {
+  display: inline-block;
+  color: var(--accent-cyan);
+  font-weight: 600;
+  margin: 0 1px;
+}
+@media (min-width: 700px) {
+  .install-app-banner-ios {
+    left: auto;
+    right: 24px;
+    bottom: 24px;
+    max-width: 380px;
+    margin: 0;
+  }
+}
+@media (max-width: 900px) {
+  .install-app-badge { top: auto; bottom: 168px; right: auto; left: 50%; transform: translateX(-50%); }
+}
+
+/* ---------- Time slider (bottom, floating) ---------- */
+.time-slider-container {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 400;
+  background: var(--bg-panel);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--border-line);
+  border-radius: 6px;
+  padding: 18px 24px 16px;
+  box-shadow: var(--shadow-panel);
+}
+.time-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 14px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.time-slider-current {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+}
+.time-slider-current .cur-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.time-slider-current .cur-era {
+  font-size: 22px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.time-slider-current .cur-age {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent-cyan);
+  letter-spacing: 0.06em;
+}
+.time-slider-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.time-slider-track-wrap {
+  position: relative;
+  padding: 6px 0 0;
+}
+.time-slider-track {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.time-slider-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: linear-gradient(90deg, #6fd0e4 0%, #a8b8ff 50%, #d99848 100%);
+  opacity: 0.55;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 3px;
+}
+
+.time-slider-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 32px;
+  margin-top: -14px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  outline: none;
+}
+.time-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: #f0f4fa;
+  border: 2px solid var(--accent-cyan);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 0 12px var(--accent-cyan), 0 0 0 3px rgba(111, 208, 228, 0.15);
+  transition: transform 0.15s ease;
+}
+.time-slider-input::-webkit-slider-thumb:hover { transform: scale(1.15); }
+.time-slider-input:active::-webkit-slider-thumb { cursor: grabbing; transform: scale(1.1); }
+.time-slider-input::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: #f0f4fa;
+  border: 2px solid var(--accent-cyan);
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 0 12px var(--accent-cyan);
+}
+
+.time-slider-ticks {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 16px;
+  gap: 2px;
+}
+.time-tick {
+  flex: 1;
+  text-align: center;
+  cursor: pointer;
+  padding: 4px 2px;
+  border-radius: 3px;
+  transition: background 0.2s ease;
+  min-width: 0;
+}
+.time-tick:hover { background: rgba(255,255,255,0.03); }
+.time-tick-line {
+  width: 1px;
+  height: 6px;
+  background: var(--border-line);
+  margin: 0 auto 4px;
+}
+.time-tick-name {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.2s ease;
+}
+.time-tick-age {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8.5px;
+  color: var(--text-dim);
+  margin-top: 2px;
+  letter-spacing: 0.04em;
+}
+.time-tick.active .time-tick-name { color: var(--accent-cyan); font-weight: 500; }
+.time-tick.active .time-tick-line { background: var(--accent-cyan); box-shadow: 0 0 6px var(--accent-cyan); }
+.time-tick.active .time-tick-age { color: var(--text-primary); }
+
+/* ---------- Pin markers ---------- */
+.strata-pin-icon {
+  width: 22px;
+  height: 22px;
+  position: relative;
+}
+.strata-pin-icon svg { width: 100%; height: 100%; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6)); }
+
+/* ---------- Notepad modal ---------- */
+.notepad-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 800;
+  background: rgba(3, 4, 8, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlayIn 0.2s ease;
+}
+@keyframes overlayIn { from { opacity: 0; } to { opacity: 1; } }
+
+.notepad-modal {
+  background: var(--bg-panel-solid);
+  border: 1px solid var(--border-glow);
+  border-radius: 6px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 40px 100px -20px rgba(0,0,0,0.9), 0 0 0 1px var(--border-glow);
+  animation: modalIn 0.25s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.notepad-header {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.notepad-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.notepad-title .dot { width: 8px; height: 8px; background: var(--accent-cyan); border-radius: 50%; box-shadow: 0 0 8px var(--accent-cyan); }
+.notepad-close {
+  background: transparent;
+  border: 1px solid var(--border-line);
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px 10px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  transition: all 0.2s ease;
+}
+.notepad-close:hover { color: var(--text-primary); border-color: var(--border-glow); }
+
+.notepad-locked {
+  padding: 16px 22px;
+  background: rgba(111, 208, 228, 0.03);
+  border-bottom: 1px solid var(--hairline);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.notepad-locked-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.notepad-locked-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.notepad-locked-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+.notepad-locked-value .lock {
+  font-size: 9px;
+  color: var(--accent-cyan);
+  margin-left: 6px;
+}
+
+.notepad-body {
+  padding: 16px 22px 20px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.notepad-textarea {
+  width: 100%;
+  min-height: 160px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  color: var(--text-primary);
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  padding: 12px 14px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.notepad-textarea:focus { border-color: var(--border-glow); background: rgba(255,255,255,0.03); }
+.notepad-textarea::placeholder { color: var(--text-dim); font-style: italic; }
+
+.notepad-footer {
+  padding: 14px 22px;
+  border-top: 1px solid var(--hairline);
+  display: flex;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.notepad-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 0.08em;
+}
+.notepad-actions {
+  display: flex;
+  gap: 8px;
+}
+.notepad-btn {
+  background: transparent;
+  border: 1px solid var(--border-line);
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px 14px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.notepad-btn:hover { border-color: var(--border-glow); color: var(--accent-cyan); }
+.notepad-btn.primary { background: var(--accent-cyan); border-color: var(--accent-cyan); color: #0a0d13; font-weight: 600; }
+.notepad-btn.primary:hover { background: #8adfef; border-color: #8adfef; color: #0a0d13; }
+.notepad-btn.danger:hover { border-color: rgba(232, 116, 111, 0.5); color: #e8746f; }
+
+/* ---------- Pin list within notepad (when opened from Clear/Manage) ---------- */
+.pin-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.pin-list-item {
+  padding: 10px 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid var(--hairline);
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.pin-list-item .pin-era { color: var(--accent-cyan); }
+.pin-list-item .pin-coords { color: var(--text-primary); }
+.pin-list-item .pin-remove {
+  margin-left: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 10px;
+  padding: 4px 8px;
+}
+.pin-list-item .pin-remove:hover { color: #e8746f; }
+
+/* ---------- Mobile responsive ---------- */
+@media (max-width: 900px) {
+  .legend-panel {
+    width: 88vw;
+    max-width: 320px;
+    top: 68px;
+    bottom: auto;
+    max-height: calc(100vh - 260px);
+  }
+  .legend-panel.collapsed {
+    transform: translateX(calc(-100% - 32px));
+    opacity: 0;
+    pointer-events: none;
+  }
+  .legend-toggle {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 48px;
+    height: 48px;
+    padding: 4px 0 3px;
+  }
+  .legend-toggle-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1;
+  }
+  .strata-header { top: 14px; padding: 6px 14px; gap: 10px; }
+  .strata-header .brand-sub { display: none; }
+  /* Push Leaflet's default top-left controls (zoom +/−) below the Menu button
+     so they no longer overlap the hamburger. Menu button occupies y=[16,64];
+     zoom container now starts at y=72 with an 8px gap. */
+  .leaflet-top.leaflet-left { top: 72px !important; }
+  .pin-controls { top: 132px; right: 12px; gap: 10px; }
+  .pin-btn {
+    min-width: unset;
+    padding: 8px 10px;
+    font-size: 9px;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    letter-spacing: 0.12em;
+    min-width: 56px;
+  }
+  .pin-btn .btn-dot { margin-bottom: 1px; }
+  .pin-btn .pin-text-full {
+    display: block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .pin-btn .pin-count { display: none; }
+  .time-slider-container { left: 12px; right: 12px; bottom: 12px; padding: 14px 16px 12px; }
+  .time-slider-current .cur-era { font-size: 18px; }
+  .time-tick-name { font-size: 8.5px; letter-spacing: 0.02em; }
+  .time-tick-age { display: none; }
+  .time-slider-hint { display: none; }
+  .notepad-locked { grid-template-columns: 1fr; gap: 8px; padding: 12px 18px; }
+
+  /* Ensure critical secondary buttons hit the 44x44 touch target on phones */
+  .notepad-close,
+  .install-app-dismiss,
+  .legend-close {
+    min-width: 44px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 500px) {
+  .legend-panel { top: 62px; left: 12px; right: 12px; width: auto; max-width: unset; max-height: 55vh; }
+  .strata-header { top: 12px; }
+  .strata-header .brand-name { font-size: 11px; letter-spacing: 0.2em; }
+  .pin-controls { top: 132px; right: 10px; gap: 10px; }
+  .pin-btn { padding: 7px 8px; }
+  .time-slider-container { padding: 12px 14px 10px; }
+  .time-slider-current { flex-wrap: wrap; gap: 8px; }
+  .time-slider-header { margin-bottom: 10px; }
+  .legend-era-name { font-size: 22px; }
+}
+
+/* ---------- Legend close (mobile only, inside panel) ---------- */
+.legend-close {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--border-line);
+  border-radius: 3px;
+  color: var(--text-muted);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 3;
+  padding: 0;
+}
+.legend-close:hover { color: var(--accent-cyan); border-color: var(--border-glow); }
+@media (max-width: 900px) {
+  .legend-close { display: flex; }
+}
+
+/* ---------- Loading indicator ---------- */
+.strata-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 500;
+  background: var(--bg-void);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+}
+.strata-loading .spinner {
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--border-line);
+  border-top-color: var(--accent-cyan);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+/* ---------- TABLET LAYOUT (768-1024px) ---------- */
+/* Additive — overrides mobile rules for tablet range only.
+   Panel becomes a fixed right-side data column. Map fills the left. */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .strata-header {
+    top: 18px;
+    padding: 10px 22px;
+  }
+  .strata-header .brand-name-full { display: block; }
+  .strata-header .brand-name-short { display: none; }
+  .strata-header .brand-name { font-size: 13px; letter-spacing: 0.22em; }
+  .strata-header .brand-sub { display: block; font-size: 10px; }
+
+  /* Wrapper reverts from dropdown-anchor to non-positioning so panel can go right */
+  .legend-nav-wrap {
+    display: block;
+    position: static;
+    top: auto;
+    left: auto;
+    z-index: auto;
+  }
+  .legend-nav-wrap .legend-toggle,
+  .legend-toggle {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    width: 54px;
+    height: 54px;
+    padding: 6px 0 5px;
+    z-index: 402;
+  }
+  .legend-toggle-label { font-size: 10px; letter-spacing: 0.16em; }
+
+  /* Right-side data column — max 360px, map stays full-width behind panel */
+  .legend-nav-wrap .legend-panel,
+  .legend-panel {
+    position: fixed !important;
+    top: 84px !important;
+    right: 20px !important;
+    left: auto !important;
+    bottom: auto !important;
+    width: 40vw !important;
+    max-width: 360px !important;
+    min-width: 280px !important;
+    height: calc(100vh - 220px) !important;
+    max-height: calc(100vh - 220px) !important;
+    z-index: 400 !important;
+    border-radius: 6px;
+  }
+  .legend-panel.collapsed {
+    transform: translateX(calc(100% + 40px)) !important;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .legend-close { display: flex; top: 14px; right: 14px; }
+
+  /* Pin controls — nudged so they don't collide with the side panel */
+  .pin-controls {
+    top: 84px;
+    right: auto;
+    left: 84px;
+    flex-direction: row;
+    gap: 12px;
+  }
+  .pin-btn {
+    min-width: 96px;
+    padding: 10px 14px;
+    font-size: 10.5px;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+  }
+  .pin-btn .pin-text-full {
+    display: inline;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--text-primary);
+  }
+  .pin-btn .pin-count { display: inline; }
+
+  /* Time slider — leave room for the side panel */
+  .time-slider-container {
+    left: 20px;
+    right: calc(40vw + 40px);
+    bottom: 20px;
+    padding: 20px 26px 18px;
+  }
+  .time-slider-current .cur-era { font-size: 24px; }
+  .time-slider-hint { display: block; font-size: 10px; }
+  .time-tick-name { font-size: 10px; letter-spacing: 0.04em; }
+  .time-tick-age { display: block; font-size: 9px; }
+
+  /* Notepad modal — center comfortably */
+  .notepad-modal { max-width: 620px; }
+  .notepad-locked { grid-template-columns: 1fr 1fr; }
+
+  /* Uncharted Open Log banner — larger, prouder on tablet */
+  [data-testid="pin-live-all-empty"] {
+    padding: 22px 26px 24px !important;
+  }
+  [data-testid="pin-live-all-empty"] > div:first-child {
+    font-size: 11px !important;
+    letter-spacing: 0.28em !important;
+  }
+  [data-testid="pin-live-all-empty"] > div:nth-child(2) {
+    font-size: 16px !important;
+    line-height: 1.5 !important;
+  }
+
+  /* Install badge — sit alongside pin controls on tablet */
+  .install-app-badge { top: 84px; right: calc(40vw + 40px); left: auto; transform: none; }
+}
+
+
+/* =====================================================================
+   Entry statement overlay (full-screen, session-only, no localStorage)
+   Dark chrome match. Two sentences, ENTER button, small mono mark.
+   ===================================================================== */
+.entry-statement-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: rgba(8, 11, 16, 0.94);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  animation: entry-fade-in 480ms ease-out both;
+  overflow-y: auto;
+}
+@keyframes entry-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.entry-statement-panel {
+  max-width: 640px;
+  width: 100%;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-line);
+  border-radius: 4px;
+  padding: 56px 48px 32px;
+  box-shadow: var(--shadow-panel);
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.entry-statement-line {
+  font-family: 'Space Grotesk', 'Inter', sans-serif;
+  font-size: 22px;
+  line-height: 1.55;
+  letter-spacing: 0.005em;
+  color: var(--text-primary);
+  margin: 0;
+  font-weight: 400;
+}
+.entry-statement-enter {
+  align-self: flex-start;
+  margin-top: 12px;
+  padding: 12px 34px;
+  background: transparent;
+  border: 1px solid var(--accent-cyan);
+  color: var(--accent-cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 200ms ease;
+}
+.entry-statement-enter:hover,
+.entry-statement-enter:focus-visible {
+  background: rgba(0, 200, 220, 0.08);
+  box-shadow: 0 0 12px rgba(0, 200, 220, 0.35);
+  outline: none;
+}
+.entry-statement-mark {
+  margin-top: 18px;
+  padding-top: 20px;
+  border-top: 1px solid var(--hairline);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  color: var(--text-muted);
+  text-align: left;
+}
+@media (max-width: 700px) {
+  .entry-statement-overlay { padding: 24px 16px; }
+  .entry-statement-panel { padding: 40px 24px 24px; gap: 22px; }
+  .entry-statement-line { font-size: 18px; line-height: 1.5; }
+  .entry-statement-enter { padding: 12px 28px; font-size: 11px; letter-spacing: 0.24em; }
+  .entry-statement-mark { font-size: 9px; letter-spacing: 0.2em; }
+}
+
+/* Re-open link inside legend panel */
+.legend-statement-link {
+  margin: 14px 0 4px;
+  padding: 8px 0 0;
+  border: none;
+  border-top: 1px solid var(--hairline);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-align: left;
+  text-decoration: underline;
+  text-decoration-color: rgba(200, 210, 220, 0.25);
+  text-underline-offset: 3px;
+  transition: color 180ms ease;
+}
+.legend-statement-link:hover { color: var(--accent-cyan); }
+
+/* =====================================================================
+   Phone layout cleanup (≤700px). Desktop untouched.
+   ===================================================================== */
+@media (max-width: 700px) {
+  /* (a) Keep the header away from the top-right layer control.
+         Layer control sits at right~10 with width ~180px, so cap the
+         header's right edge at 200px from the right side. */
+  .strata-header {
+    left: 14px;
+    right: 200px;
+    transform: none;
+    max-width: none;
+    justify-content: flex-start;
+  }
+  /* (b) Layer control must stay ABOVE the legend backdrop AND the legend
+         panel itself when the Menu/legend panel is open on mobile, so all
+         five toggles remain clickable. Raise the whole Leaflet control
+         container so its stacking context sits on top of legend-panel (z:400). */
+  .leaflet-control-container,
+  .leaflet-top,
+  .leaflet-top.leaflet-right,
+  .leaflet-control-layers {
+    z-index: 1001 !important;
+  }
+  /* (c) Pin buttons (MANAGE + DROP PIN) must clear the fully-expanded
+         5-row layer control (which now ends around y=148). */
+  .pin-controls { top: 160px !important; }
+}
+@media (max-width: 500px) {
+  .pin-controls { top: 160px !important; }
+  /* (b) On phones the legend panel is on the LEFT; shrink it so it never
+     crosses into the top-right layer control's x-range (starts x≈185 on
+     375px), keeping all five toggles fully visible and clickable while
+     the panel is open. Panel scrolls internally as needed. */
+  .legend-panel {
+    right: 195px !important;
+    width: auto !important;
+    max-width: none !important;
+  }
+}

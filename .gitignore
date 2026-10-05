@@ -1,0 +1,12 @@
+# Runtime / platform
+.emergent/
+.ruff_cache/
+memory/
+__pycache__/
+*.pyc
+test_result.md
+node_modules/
+dist/
+build/
+.DS_Store
+*.pem
